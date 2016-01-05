@@ -35,7 +35,9 @@ Sample code:
 
 # TO DO:
 
-- move controllers into services
+- move controllers into `PrayerCornerService.php`
+- move event code out of `PrayerCornerPlugin.php`
+- update sectionId in `PrayerCornerPlugin.php`
 
 
 
