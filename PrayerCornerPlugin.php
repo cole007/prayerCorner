@@ -26,20 +26,20 @@ class PrayerCornerPlugin extends BasePlugin
         return 'http://ournameismud.co.uk';
     }
 
-    protected function defineSettings()
-    {
-        return array(
-            'showCountOnEntryIndex' => array(AttributeType::Bool, 'default' => 0),
-            'ignoreLoggedInUsers' => array(AttributeType::Bool, 'default' => 0),
-            'ignoreIpAddresses' => array(AttributeType::Mixed, 'default' => '')
-        );
-    }
-    public function getSettingsHtml()
-    {
-        return craft()->templates->render('prayercorner/settings', array(
-            'settings' => $this->getSettings()
-        ));
-    }
+//    protected function defineSettings()
+//    {
+//        return array(
+//            'showCountOnEntryIndex' => array(AttributeType::Bool, 'default' => 0),
+//            'ignoreLoggedInUsers' => array(AttributeType::Bool, 'default' => 0),
+//            'ignoreIpAddresses' => array(AttributeType::Mixed, 'default' => '')
+//        );
+//    }
+//    public function getSettingsHtml()
+//    {
+//        return craft()->templates->render('prayercorner/settings', array(
+//            'settings' => $this->getSettings()
+//        ));
+//    }
 
 
     // Hooks/events
@@ -48,30 +48,32 @@ class PrayerCornerPlugin extends BasePlugin
     {
         parent::init();
 
-        //Event: onBeforeSaveEntry
+        // Event: onBeforeSaveEntry
         craft()->on('entries.onBeforeSaveEntry', function(Event $event) {
 
-
-            // check entry_id
+            // check entry and declare relevant variables
             $entry = $event->params['entry'];
             $title= $entry->title;
             $id = $entry->id;
             $sectionId = $entry->sectionId;
             $enabled = $entry->enabled;
-            // relevant field
+
+            // custom field to check against
             $relatedTo = $entry->relatedTo;
 
+            // get parent entry from relationship
             $parent = craft()->entries->getEntryById($relatedTo);
 
+            // declare body of email message
             $body = $entry->body . '
 ===
-You have signed up to receive updates to ' . $parent->title . '<br />
+You have signed up to receive updates for ' . $parent->title . '<br />
 To unsubscribe from these updates please click on this link: ';
 
 
-            // check status
+            // check status (section and enabled)
             if ($sectionId == 2 && $enabled == 1) {
-                // check against rels for entry_id
+                // check against PC records for subscriptions
                 $PrayerCornerRecord = PrayerCornerRecord::model()->findAllByAttributes(array('entryId' => $relatedTo));
                 foreach($PrayerCornerRecord AS $prayer) {
                     $temp = array();
@@ -82,7 +84,7 @@ To unsubscribe from these updates please click on this link: ';
 
                 $email = new EmailModel();
                 $email->subject = 'An update to ' . $parent->title;
-                // loop through emails for entry_id and collect
+                // loop through emails for recipients and unsubscribe refs
                 foreach ($emails AS $value) {
                     $recipient = $value['recipient'];
                     $uid= $value['uid'];
@@ -109,26 +111,8 @@ To unsubscribe from these updates please click on this link: ';
                     LogLevel::Info,
                     true
                 );
-//
             }
-//            exit;
-//
-//
-//            print_r('wibble');
-//            //Is the entry in the section 'parts'?
-//            if ($event->params['entry']->section == 'parts') {
-//
-//                //Check if field is a number
-//                if (is_numeric($event->params['entry']->number_field_handle)) {
-//                    //Do your JSON stuff
-//
-//                    //Replace values
-//                    $event->params['entry']->getContent()->number_field_handle = 'something_else';
-//                }
-//
-//            }
         });
     }
-
 
 }
