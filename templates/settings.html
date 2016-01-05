@@ -1,0 +1,8 @@
+{% import "_includes/forms" as forms %}
+
+{{ forms.lightswitchField({
+label: "Show count on entry index pages"|t,
+instructions: "Will add a new column for the entry count on the entry index pages"|t,
+name: 'showCountOnEntryIndex',
+on: settings.showCountOnEntryIndex,
+}) }}
