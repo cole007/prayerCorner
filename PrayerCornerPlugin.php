@@ -30,20 +30,19 @@ class PrayerCornerPlugin extends BasePlugin
     {
         return true;
     }
-//    protected function defineSettings()
-//    {
-//        return array(
-//            'showCountOnEntryIndex' => array(AttributeType::Bool, 'default' => 0),
-//            'ignoreLoggedInUsers' => array(AttributeType::Bool, 'default' => 0),
-//            'ignoreIpAddresses' => array(AttributeType::Mixed, 'default' => '')
-//        );
-//    }
-//    public function getSettingsHtml()
-//    {
-//        return craft()->templates->render('prayercorner/settings', array(
-//            'settings' => $this->getSettings()
-//        ));
-//    }
+    protected function defineSettings()
+    {
+        return array(
+            'parentSection' => array(AttributeType::Mixed, 'default' => ''),
+            'fieldType' => array(AttributeType::Mixed, 'default' => '')
+        );
+    }
+    public function getSettingsHtml()
+    {
+        return craft()->templates->render('prayercorner/settings', array(
+            'settings' => $this->getSettings()
+        ));
+    }
 
 
     // Hooks/events
@@ -51,7 +50,6 @@ class PrayerCornerPlugin extends BasePlugin
     public function init()
     {
         parent::init();
-
         // Event: onBeforeSaveEntry
         craft()->on('entries.onBeforeSaveEntry', function(Event $event) {
 
@@ -62,8 +60,13 @@ class PrayerCornerPlugin extends BasePlugin
             $sectionId = $entry->sectionId;
             $enabled = $entry->enabled;
 
+            // get settings
+            $settings = craft()->plugins->getPlugin('prayerCorner')->getSettings();
+            $section = $settings->parentSection;
+            $field = $settings->fieldType;
+
             // custom field to check against
-            $relatedTo = $entry->relatedTo;
+            $relatedTo = $entry[$field];
 
             // get parent entry from relationship
             $parent = craft()->entries->getEntryById($relatedTo);
@@ -76,9 +79,10 @@ To unsubscribe from these updates please click on this link: ';
 
 
             // check status (section and enabled)
-            if ($sectionId == 2 && $enabled == 1) {
+            if ($sectionId == $section && $enabled == 1) {
                 // check against PC records for subscriptions
                 $PrayerCornerRecord = PrayerCornerRecord::model()->findAllByAttributes(array('entryId' => $relatedTo));
+                $emails = array();
                 foreach($PrayerCornerRecord AS $prayer) {
                     $temp = array();
                     $temp['recipient'] = $prayer->email;
@@ -89,29 +93,34 @@ To unsubscribe from these updates please click on this link: ';
                 $email = new EmailModel();
                 $email->subject = 'An update to ' . $parent->title;
                 // loop through emails for recipients and unsubscribe refs
-                foreach ($emails AS $value) {
-                    $recipient = $value['recipient'];
-                    $uid= $value['uid'];
-                    try
-                    {
-                        // Add a specific recipient to the email model
-                        $email->toEmail = $recipient;
-                        // append UID to message
-                        $email->body = $body . UrlHelper::getActionUrl('PrayerCorner/Unsubscribe',$uid);
-                        // Send the email
-                        craft()->email->sendEmail( $email );
-                    }
-                    catch ( \Exception $e )
-                    {
-                        // Do nothing
-                        return false;
-                    }
+                if (count($PrayerCornerRecord) > 0) {
+                    foreach ($emails AS $value) {
+                        $recipient = $value['recipient'];
+                        $uid = $value['uid'];
+                        try {
+                            // Add a specific recipient to the email model
+                            $email->toEmail = $recipient;
+                            // append UID to message
+                            $email->body = $body . UrlHelper::getActionUrl('PrayerCorner/Unsubscribe', $uid);
+                            // Send the email
+                            craft()->email->sendEmail($email);
+                            // log emails sent
+                            PrayerCornerPlugin::log(
+                                'email sent to ' . $recipient . ' ('.$relatedTo.')',
+                                LogLevel::Info,
+                                true
+                            );
+                        } catch (\Exception $e) {
+                            // Do nothing
+                            return false;
+                        }
 
+                    }
                 }
 
                 // log emails sent
                 PrayerCornerPlugin::log(
-                    count($emails) . ' emails sent regarding ' . $parent->title . '('.$relatedTo.')',
+                    count($PrayerCornerRecord) . ' emails sent regarding ' . $parent->title . ' ('.$relatedTo.')',
                     LogLevel::Info,
                     true
                 );

@@ -1,8 +1,31 @@
 {% import "_includes/forms" as forms %}
 
-{{ forms.lightswitchField({
-label: "Show count on entry index pages"|t,
-instructions: "Will add a new column for the entry count on the entry index pages"|t,
-name: 'showCountOnEntryIndex',
-on: settings.showCountOnEntryIndex,
-}) }}
+{% set sections = craft.sections.getAllSections() %}
+{% set sectionOptions = [] %}
+{% for section in sections %}
+    {% set sectionOptions = sectionOptions|merge([{ label: section.name|t, value: section.id }]) %}
+{% endfor %}
+
+{{ forms.selectField({
+    label: "Show count on entry index pages"|t,
+    instructions: "Will add a new column for the entry count on the entry index pages"|t,
+    name: 'parentSection',
+    on: settings.parentSection,
+    options: sectionOptions,
+    value: settings.parentSection
+    }) }}
+
+{% set fields= craft.fields.getAllFields() %}
+{% set fieldsOptions = [] %}
+{% for field in fields %}
+    {% set fieldsOptions = fieldsOptions |merge([{ label: field.group ~ ': ' ~ field.name|t, value: field.handle }]) %}
+{% endfor %}
+
+{{ forms.selectField({
+    label: "Show count on entry index pages"|t,
+    instructions: "Will add a new column for the entry count on the entry index pages"|t,
+    name: 'fieldType',
+    on: settings.fieldType,
+    value: settings.fieldType,
+    options: fieldsOptions
+    }) }}
