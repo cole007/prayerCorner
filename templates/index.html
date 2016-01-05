@@ -1,0 +1,35 @@
+{% extends "_layouts/cp" %}
+
+{% set title = "Prayer Corner" %}
+{% set entries = craft.prayerCorner.getEntries %}
+
+{% block content %}
+
+    {% if entries | length %}
+    <table class="data fullwidth">
+        <thead>
+            <th>Id</th>
+            <!--<th>Entry</th>-->
+            <th>Entry</th>
+            <th>Email</th>
+            <th>Date Updated</th>
+            <th></th>
+        </thead>
+        {% for entry in entries %}
+        <tr>
+
+            <td>{{ entry.id }}</td>
+            <!--<td>{{ entry.entryId }}</td>-->
+            {% set article= craft.entries({ id: entry.entryId }).first() %}
+            <td><a href="{{ article.url }}" class="go" target="_blank">{{ article.title }}</a></td>
+            <td>{{ entry.email }}</td>
+            <td>{{ entry.dateUpdated }}</td>
+            <td><a href="{{ actionUrl('prayerCorner/reset', { uid: entry.uid }) }}" class="delete icon"></a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+        <p>There are no active subscriptions.</p>
+    {% endif %}
+
+{%  endblock %}

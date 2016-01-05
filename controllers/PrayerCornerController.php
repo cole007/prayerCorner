@@ -111,7 +111,7 @@ To unsubscribe from these updates at any time please click on this link: ' . $un
             $this->redirect($entry->getUrl());
         } else {
             // log error
-            // PrayerCornerPlugin::log(
+             PrayerCornerPlugin::log(
                 'Erroneous unsubscribe link followed (' . $uid. ')',
                 LogLevel::Info,
                 true
@@ -120,5 +120,14 @@ To unsubscribe from these updates at any time please click on this link: ' . $un
             $this->redirect( craft()->getSiteUrl() );
         }
 
+    }
+
+    public function actionReset()
+    {
+        $uid = craft()->request->getRequiredParam('uid');
+
+        craft()->prayerCorner->reset($uid);
+        craft()->userSession->setNotice(Craft::t('Prayer Corner subscription has been removed.'));
+        $this->redirect('prayerCorner');
     }
 }

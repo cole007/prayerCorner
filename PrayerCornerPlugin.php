@@ -26,6 +26,10 @@ class PrayerCornerPlugin extends BasePlugin
         return 'http://ournameismud.co.uk';
     }
 
+    public function hasCpSection()
+    {
+        return true;
+    }
 //    protected function defineSettings()
 //    {
 //        return array(
